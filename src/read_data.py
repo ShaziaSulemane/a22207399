@@ -109,7 +109,7 @@ def main():
     d = read_json("/home/shazia/PycharmProjects/a22207399/dataset/via_project_6Nov2022_10h31m_json.json", verbose=1)
     # floors = find_floor(d)
     # draw_floor(floors, dataset_folder)
-    measure_lenght(d, [[0, 1], [1, 2]], verbose=1, mode='avg')
+    measure_length(d, [[0, 1], [1, 2]], verbose=1, mode='avg')
 
 
 if __name__ == "__main__":
