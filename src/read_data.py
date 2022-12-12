@@ -98,19 +98,5 @@ def measure_length(dict, points_to_measure, pixel_irl=None, verbose=0, mode='Non
         if verbose == 1:
             print("Averages: " + str(avg))
         return dist_dict, avg
-    #todo elif mode=='median'
+    return dist_dict, None
 
-#todo create tensors from images and values
-
-def main():
-    video_folder = "/home/shazia/PycharmProjects/a22207399/videos/VID_20210625_100510.mp4"
-    dataset_folder = "/home/shazia/PycharmProjects/a22207399/dataset/"
-    json_notations = ""
-    d = read_json("/home/shazia/PycharmProjects/a22207399/dataset/via_project_6Nov2022_10h31m_json.json", verbose=1)
-    # floors = find_floor(d)
-    # draw_floor(floors, dataset_folder)
-    measure_length(d, [[0, 1], [1, 2]], verbose=1, mode='avg')
-
-
-if __name__ == "__main__":
-    main()
