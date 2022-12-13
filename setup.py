@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name='horse_length_lib',
+    name='networkLibrary',
     version='1.0',
     packages=[''],
     url='https://github.com/ShaziaSulemane/a22207399',
