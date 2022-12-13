@@ -33,6 +33,7 @@ def read_json(path, verbose=0):
         dict[data[frame]['filename']] = points
         if verbose == 1:
             print("name:" + data[frame]['filename'] + " points: " + str(points))
+    f.close()
     return dict
 
 
