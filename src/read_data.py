@@ -94,10 +94,26 @@ def measure_length(dict, points_to_measure, pixel_irl=None, verbose=0, mode='Non
                 div[i] = div[i] + 1
 
         for i in range(len(avg)):
-            avg[i] = avg[i] / div[i]
+            if div[i] != 0:
+                avg[i] = avg[i] / div[i]
 
         if verbose == 1:
             print("Averages: " + str(avg))
         return dist_dict, avg
     return dist_dict, None
 
+
+def main():
+    dict_json = read_json("/home/shazia/PycharmProjects/a22207399/samples/presentation/via_project_16Dec2022_18h28m_json.json", verbose=1)
+    #dict_json_1 = read_json("/home/shazia/PycharmProjects/a22207399/dataset/via_project_6Nov2022_10h31m_json.json", verbose=0)
+
+    dist_dict, avg = measure_length(dict_json, [[0, 1], [2, 8], [4, 6]], mode='avg', verbose=1)
+    floors = find_floor(dict_json)
+
+    # dist_dict, avg = measure_length(dict_json_1, [[0, 1], [1, 2]], mode='avg', verbose=1)
+    # floors = find_floor(dict_json_1)
+
+
+
+if __name__ == "__main__":
+    main()
