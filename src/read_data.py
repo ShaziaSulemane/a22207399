@@ -70,7 +70,7 @@ def find_floor(dict):
         dict[name] = ymax
     return dict
 
-
+# todo review this function
 def draw_floor(dict, img_path, floor_thickness=9, floor_color=(0, 255, 0)):
     '''
     Visualise the different floor coordinates pointed by find_floor
@@ -148,6 +148,35 @@ def measure_length(dict, points_to_measure, pixel_irl=None, verbose=0, mode='Non
             print("Averages: " + str(avg))
         return dist_dict, avg
     return dist_dict, None
+
+# todo make dict into tensors
+def make_tensors(dict):
+    '''
+    Transforms the dictionary into input tensors
+    :param dict:
+    :return:
+    '''
+
+
+def show_shapes(dict, connections):
+    '''
+    connects the points according to connections describes in connections
+    :param dict:
+    :param connections:
+    :return:
+    '''
+
+
+def show_shapes_random(dict, how_many, connections):
+    '''
+    connects the points and shows 'how_many' samples from the dataset
+    :param dict:
+    :param how_many:
+    :param connections:
+    :return:
+    '''
+
+
 
 
 def main():
