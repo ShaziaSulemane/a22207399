@@ -1,18 +1,14 @@
 import json
 import math
-
-import tensorflow
-import tensorflow as tf
 import cv2 as cv
-import numpy as np
 
-
+from image_network_library import visualization
+from image_network_library import networks
 def extract_images(pathIn, pathOut, verbose=0):
     '''
     Extracts and saves video frames every 1/4 of a second
-
     :param pathIn: Path of the video to read frames from
-    :param pathOut: Path of the ouput folder where the resulting frames will be saved
+    :param pathOut: Path of the output folder where the resulting frames will be saved
     :param verbose: Verbose is 0 by default, which gives no information
     Verbose is 1 for adittional information while function is running
     :return: none
@@ -33,7 +29,6 @@ def extract_images(pathIn, pathOut, verbose=0):
 def read_json(path, verbose=0):
     '''
     Reads and converts the VGG Image Annotator json to a dictionary
-
     :param path: Path of the json file
     :param verbose: Verbose is 0 by default, gives no extra information
     Verbose is 1 to give the dictionary entries
@@ -70,11 +65,11 @@ def find_floor(dict):
         dict[name] = ymax
     return dict
 
+
 # todo review this function
 def draw_floor(dict, img_path, floor_thickness=9, floor_color=(0, 255, 0)):
     '''
     Visualise the different floor coordinates pointed by find_floor
-
     :param dict: Dictionary structure <Name of File, Floor Coordinates>
     :param img_path: Folder of the images in the dictionary structure
     :param floor_thickness: Pixel thickness for visualizing floor
@@ -129,7 +124,7 @@ def measure_length(dict, points_to_measure, pixel_irl=None, verbose=0, mode='Non
 
     if mode == 'avg':
         avg = [0] * len(points_to_measure)
-        
+
         for value in dist_dict.values():
             for i in range(len(value)):
                 avg[i] = avg[i] + value[i]
@@ -149,47 +144,23 @@ def measure_length(dict, points_to_measure, pixel_irl=None, verbose=0, mode='Non
         return dist_dict, avg
     return dist_dict, None
 
+
 # todo make dict into tensors
 def make_tensors(dict):
     '''
     Transforms the dictionary into input tensors
-    :param dict:
-    :return:
+    :param dict: dictionary of shape <name_of_file, xy_coordinates>
+    :return: a dictionary of the same shape but all xy_coordinates list have the same size and shape, any empty spaces
+    are filled with [-1, -1]
     '''
 
+    values = list(dict.values())
+    longest = 0
+    for value in values:
+        longest = max(longest, len(value))
 
-def show_shapes(dict, connections):
-    '''
-    connects the points according to connections describes in connections
-    :param dict:
-    :param connections:
-    :return:
-    '''
-
-
-def show_shapes_random(dict, how_many, connections):
-    '''
-    connects the points and shows 'how_many' samples from the dataset
-    :param dict:
-    :param how_many:
-    :param connections:
-    :return:
-    '''
+    for key in dict.keys():
+        if len(dict[key]) != 3:
+            dict[key].append([-1, -1])
 
 
-
-
-def main():
-    dict_json = read_json("/home/shazia/PycharmProjects/a22207399/samples/presentation/via_project_16Dec2022_18h28m_json.json", verbose=1)
-    #dict_json_1 = read_json("/home/shazia/PycharmProjects/a22207399/dataset/via_project_6Nov2022_10h31m_json.json", verbose=0)
-
-    dist_dict, avg = measure_length(dict_json, [[0, 1], [2, 8], [4, 6]], mode='avg', verbose=1)
-    floors = find_floor(dict_json)
-
-    # dist_dict, avg = measure_length(dict_json_1, [[0, 1], [1, 2]], mode='avg', verbose=1)
-    # floors = find_floor(dict_json_1)
-
-
-
-if __name__ == "__main__":
-    main()

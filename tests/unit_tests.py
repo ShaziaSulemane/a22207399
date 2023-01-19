@@ -1,5 +1,5 @@
 import unittest
-from src import read_data as rd
+from image_network_library import preprocessing as rd
 import tracemalloc
 
 tracemalloc.start()

@@ -9,7 +9,7 @@ the points should be marked using
 
 In order to use this package you can install it as a pip package using
 
-    pip install -i https://test.pypi.org/simple/ networkLibrary==1.0
+    pip install image-network-library==1.0.0
 
 or clone it and use it as part of your project using
 
