@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='image_network_library',
-    version='1.0.0',
+    version='1.0.1',
     packages=['image_network_library'],
     url='https://github.com/ShaziaSulemane/a22207399',
     license='MIT',

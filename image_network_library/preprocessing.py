@@ -65,27 +65,6 @@ def find_floor(dict):
         dict[name] = ymax
     return dict
 
-
-# todo review this function
-def draw_floor(dict, img_path, floor_thickness=9, floor_color=(0, 255, 0)):
-    '''
-    Visualise the different floor coordinates pointed by find_floor
-    :param dict: Dictionary structure <Name of File, Floor Coordinates>
-    :param img_path: Folder of the images in the dictionary structure
-    :param floor_thickness: Pixel thickness for visualizing floor
-    :param floor_color: Color of the floor line
-    :return: Image with floor line
-    '''
-    for name in dict.keys():
-        path = img_path + name
-        img = cv.imread(path, cv.IMREAD_GRAYSCALE)
-        h, w = img.shape
-        init_coord = [0, dict.get(name)]
-        end_coord = [w, dict.get(name)]
-        cv.line(img, init_coord, end_coord, floor_color, floor_thickness)
-        return img
-
-
 def measure_length(dict, points_to_measure, pixel_irl=None, verbose=0, mode='None'):
     '''
     Measures the lenght between coordinates according to the points_to_measure list
