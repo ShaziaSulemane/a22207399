@@ -7,9 +7,18 @@ the points should be marked using
 
 ## How to use it
 
-In order to use this package you can install it as a pip package using
+### Dependencies
+
+The packages used by this library, and respective versions, are presented in the following list.
+
+    opencv_python>4.7
+    json
+    math
+
+In order to use this package you can install it as a pip package using one of the following versions
 
     pip install image-network-library==1.0.0
+    pip install image-network-library==1.0.1
 
 or clone it and use it as part of your project using
 
@@ -35,13 +44,20 @@ horse's shoulders, and point number 3 is always representative of the horse's be
 
 ## The Functions
 
-There are five available functions in this library:
+There are seven available functions in this library:
+
+In the *image_network_library.preprocessing* module you can access
 
 1. extractImages
 2. read_json
 3. find_floor
 4. draw_floor
 5. measure_length
+
+In the *image_network_library.visualization* module you can access
+
+6. show_shapes
+7. show_shapes_random
 
 ### 1. extractImages
 
