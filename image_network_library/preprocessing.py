@@ -4,6 +4,17 @@ import cv2 as cv
 
 from image_network_library import visualization
 from image_network_library import networks
+
+
+import sys
+
+if sys.version_info < (3, 10):
+    from importlib_metadata import entry_points
+else:
+    from importlib.metadata import entry_points
+
+discovered_plugins = entry_points(group='myapp.plugins')
+
 def extract_images(pathIn, pathOut, verbose=0):
     '''
     Extracts and saves video frames every 1/4 of a second
@@ -49,28 +60,29 @@ def read_json(path, verbose=0):
     return dict
 
 
-def find_floor(dict):
+def find_floor(d):
     '''
     Finds the lower coordinate point in an image using the dictionary structure from read_json function
 
-    :param dict: Dictionary structure <Name of File, Coordinates>
+    :param d: Dictionary structure <Name of File, Coordinates>
     :return: Dictionary structure <Name of File, Floor Coordinates>
     '''
     ymax = 0
-    for name in dict.keys():
-        value = dict.get(name)
+    for name in d.keys():
+        value = d.get(name)
         for coord in value:
             if ymax < coord[1]:
                 ymax = coord[1]
-        dict[name] = ymax
-    return dict
+        d[name] = ymax
+    return d
 
-def measure_length(dict, points_to_measure, pixel_irl=None, verbose=0, mode='None'):
+
+def measure_length(d, points_to_measure, pixel_irl=None, verbose=0, mode='None'):
     '''
     Measures the lenght between coordinates according to the points_to_measure list
     If you want to measure the distances between point 1 and point 2, and point 3 and point 4
     the points to measure array should have this value [[0,1],[2,3]]
-    :param dict: Dictionary structure <Name of File, Coordinates>
+    :param d: Dictionary structure <Name of File, Coordinates>
     :param points_to_measure: List of pairs to measure inbetween
     :param pixel_irl: The real life measurement of a pixel
     :param verbose: verbose = 0 for zero informational strings during the function's execution
@@ -81,8 +93,8 @@ def measure_length(dict, points_to_measure, pixel_irl=None, verbose=0, mode='Non
     :return: Dictionary structure <Name of File, Distances> and Average value - average value is none when mode is not set or 'None'
     '''
     dist_dict = {}
-    for name in dict.keys():
-        value = dict.get(name)
+    for name in d.keys():
+        value = d.get(name)
         dist = []
         for p in points_to_measure:
             if value:
@@ -125,21 +137,21 @@ def measure_length(dict, points_to_measure, pixel_irl=None, verbose=0, mode='Non
 
 
 # todo make dict into tensors
-def make_tensors(dict):
+def make_tensors(d):
     '''
     Transforms the dictionary into input tensors
-    :param dict: dictionary of shape <name_of_file, xy_coordinates>
+    :param d: dictionary of shape <name_of_file, xy_coordinates>
     :return: a dictionary of the same shape but all xy_coordinates list have the same size and shape, any empty spaces
     are filled with [-1, -1]
     '''
 
-    values = list(dict.values())
+    values = list(d.values())
     longest = 0
     for value in values:
         longest = max(longest, len(value))
 
-    for key in dict.keys():
-        if len(dict[key]) != 3:
-            dict[key].append([-1, -1])
+    for key in d.keys():
+        if len(d[key]) != 3:
+            d[key].append([-1, -1])
 
-
+    return d

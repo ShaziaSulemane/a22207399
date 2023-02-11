@@ -5,7 +5,7 @@ import tracemalloc
 tracemalloc.start()
 
 
-class MyTestCase(unittest.TestCase):
+class preprocessing_test(unittest.TestCase):
     def test_json_read(self):
         path = "via_project_12Dec2022_19h12m_json.json"
         mydict = rd.read_json(path, verbose=0)

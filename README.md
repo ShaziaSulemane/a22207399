@@ -19,8 +19,9 @@ In order to use this package you can install it as a pip package using one of th
 
     pip install image-network-library==1.0.0
     pip install image-network-library==1.0.1
+    pip install image-network-library==1.0.2
 
-or clone it and use it as part of your project using
+or clone it and use it as part of your project using                              
 
     git clone <link_of_repository>
 
@@ -51,13 +52,13 @@ In the *image_network_library.preprocessing* module you can access
 1. extractImages
 2. read_json
 3. find_floor
-4. draw_floor
-5. measure_length
+4. measure_length
 
 In the *image_network_library.visualization* module you can access
 
-6. show_shapes
-7. show_shapes_random
+5. show_shapes
+6. show_shapes_random
+7. draw_floor
 
 ### 1. extractImages
 

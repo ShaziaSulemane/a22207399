@@ -1,9 +1,10 @@
 [build-system]
-requires = ["setuptools ~= 58.0", "cython ~= 0.29.0"]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
 [project]
-name = "image_network_library"
-version = "1.0.1"
+name = "ImageNetworkLibrary"
+version = "1.0.3"
 description = "Image Processing Library with neural networks and pre processing methods"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -21,12 +22,18 @@ classifiers = [
 ]
 
 dependencies = [
-  "opencv_python>4.7",
-  "json",
-  "math"
+  "opencv_python>4.7"
 ]
 
 [project.urls]
 homepage = "https://github.com/ShaziaSulemane/a22207399"
 documentation = "https://github.com/ShaziaSulemane/a22207399"
 repository = "https://github.com/ShaziaSulemane/a22207399"
+
+[tool.setuptools]
+packages = ["image_network_library"]
+
+[project.entry-points.'myapp.plugins']
+a = 'myapp_plugin_a'
+
+#https://packaging.python.org/en/latest/guides/creating-and-discovering-plugins/
