@@ -2,7 +2,23 @@ import tensorflow as tf
 import tensorflow_hub as hub
 
 
-def create_model(model_url, target_size, num_coordinates, activation_function="nelu"):
+def nelu(x):
+    """
+    A Relu function that does not get rid of the negative values,
+    since the input data has (-1, -1) for points that are not in the input image
+    some way of keeping those values negative is needed since (0, 0) is a valid coordinate
+    This way any negative value is -1, and all positives follow the normal relu outputs
+    :param x: float Tensor to perform activation.
+    :return: value of x, -1 if negative, equal if positive
+    """
+    if x < 0:
+        return -1
+    else:
+        return x
+
+
+
+def create_model(model_url, target_size, num_coordinates, activation_function=nelu):
     """
     Create a model using the tensorflow hub. The final model has a feature_extractor_layer where the model from
     the model_url is and an output dense layer of (num_coordinates, 2)
@@ -24,23 +40,4 @@ def create_model(model_url, target_size, num_coordinates, activation_function="n
     ])
 
     return model
-
-
-def nelu(x):
-    """
-    A Relu function that does not get rid of the negative values,
-    since the input data has (-1, -1) for points that are not in the input image
-    some way of keeping those values negative is needed since (0, 0) is a valid coordinate
-    This way any negative value is -1, and all positives follow the normal relu outputs
-    :param x: float Tensor to perform activation.
-    :return: value of x, -1 if negative, equal if positive
-    """
-    if x < 0:
-        return -1
-    else:
-        return x
-
-
-
-
 
