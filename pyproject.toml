@@ -22,7 +22,17 @@ classifiers = [
 ]
 
 dependencies = [
-  "opencv_python>4.7"
+  "opencv_python>4.7",
+  "tensorflow",
+  "statistics"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pdoc",
+  "pytest",
+  "coverage",
+  "pytest-cov"
 ]
 
 [project.urls]
