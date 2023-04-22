@@ -13,16 +13,11 @@ from image_network_library.preprocessing import (
 )
 
 from image_network_library.networks import (
-    networks,
     deepvit,
     ViT,
     mobile_vit
 )
-
-from image_network_library.networks.networks import (
-    create_model,
-    nelu
-)
+from image_network_library import networks
 
 from image_network_library.networks.deepvit import (
     PreNorm,
