@@ -1,13 +1,16 @@
-import tensorflow as tf
-from tensorflow import einsum
-from tensorflow import keras
-from keras import Model
-from keras.layers import Layer
-from keras import Sequential
 import keras.layers as nn
-
+import tensorflow as tf
 from einops import rearrange, repeat
 from einops.layers.tensorflow import Rearrange
+from keras import Model
+from keras import Sequential
+from keras.layers import Layer
+from tensorflow import einsum
+
+
+def pair(t):
+    return t if isinstance(t, tuple) else (t, t)
+
 
 class PreNorm(Layer):
     def __init__(self, fn):
@@ -19,34 +22,38 @@ class PreNorm(Layer):
     def call(self, x, training=True):
         return self.fn(self.norm(x), training=training)
 
+
 class MLP(Layer):
     def __init__(self, dim, hidden_dim, dropout=0.0):
         super(MLP, self).__init__()
-        def Nelu():
-            def nelu(x):
-                if x < 0:
-                    return -1
+
+        def GELU():
+            def gelu(x, approximate=False):
+                if approximate:
+                    coeff = tf.cast(0.044715, x.dtype)
+                    return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
                 else:
-                    return x
+                    return 0.5 * x * (1.0 + tf.math.erf(x / tf.cast(1.4142135623730951, x.dtype)))
 
-            return nn.Activation(nelu)
+            return nn.Activation(gelu)
 
-        self.net = [
+        self.net = Sequential([
             nn.Dense(units=hidden_dim),
-            Nelu(),
+            GELU(),
             nn.Dropout(rate=dropout),
             nn.Dense(units=dim),
             nn.Dropout(rate=dropout)
-        ]
-        self.net = Sequential(self.net)
+        ])
 
     def call(self, x, training=True):
         return self.net(x, training=training)
+
 
 class Attention(Layer):
     def __init__(self, dim, heads=8, dim_head=64, dropout=0.0):
         super(Attention, self).__init__()
         inner_dim = dim_head * heads
+        project_out = not (heads == 1 and dim_head == dim)
 
         self.heads = heads
         self.scale = dim_head ** -0.5
@@ -54,20 +61,14 @@ class Attention(Layer):
         self.attend = nn.Softmax()
         self.to_qkv = nn.Dense(units=inner_dim * 3, use_bias=False)
 
-        self.reattn_weights = tf.Variable(initial_value=tf.random.normal([heads, heads]))
+        if project_out:
+            self.to_out = [
+                nn.Dense(units=dim),
+                nn.Dropout(rate=dropout)
+            ]
+        else:
+            self.to_out = []
 
-        self.reattn_norm = [
-            Rearrange('b h i j -> b i j h'),
-            nn.LayerNormalization(),
-            Rearrange('b i j h -> b h i j')
-        ]
-
-        self.to_out = [
-            nn.Dense(units=dim),
-            nn.Dropout(rate=dropout)
-        ]
-
-        self.reattn_norm = Sequential(self.reattn_norm)
         self.to_out = Sequential(self.to_out)
 
     def call(self, x, training=True):
@@ -75,20 +76,17 @@ class Attention(Layer):
         qkv = tf.split(qkv, num_or_size_splits=3, axis=-1)
         q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.heads), qkv)
 
-        # attention
-        dots = tf.matmul(q, tf.transpose(k, perm=[0, 1, 3, 2])) * self.scale
+        # dots = tf.matmul(q, tf.transpose(k, perm=[0, 1, 3, 2])) * self.scale
+        dots = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
         attn = self.attend(dots)
 
-        # re-attention
-        attn = einsum('b h i j, h g -> b g i j', attn, self.reattn_weights)
-        attn = self.reattn_norm(attn)
-
-        # aggregate and out
-        x = tf.matmul(attn, v)
+        # x = tf.matmul(attn, v)
+        x = einsum('b h i j, b h j d -> b h i d', attn, v)
         x = rearrange(x, 'b h n d -> b n (h d)')
         x = self.to_out(x, training=training)
 
         return x
+
 
 class Transformer(Layer):
     def __init__(self, dim, depth, heads, dim_head, mlp_dim, dropout=0.0):
@@ -109,17 +107,44 @@ class Transformer(Layer):
 
         return x
 
-class DeepViT(Model):
-    def __init__(self, image_size, patch_size, num_classes, dim, depth, heads, mlp_dim,
-                 pool='cls', dim_head=64, dropout=0.0, emb_dropout=0.0):
-        super(DeepViT, self).__init__()
 
-        assert image_size % patch_size == 0, 'Image dimensions must be divisible by the patch size.'
-        num_patches = (image_size // patch_size) ** 2
+class ViT(Model):
+    def __init__(self, image_size, patch_size, num_coordinates, dim, depth, heads, mlp_dim,
+                 pool='cls', dim_head=64, dropout=0.0, emb_dropout=0.0):
+        """
+            image_size: int.
+            -> Image size. If you have rectangular images, make sure your image size is the maximum of the width and height
+            patch_size: int.
+            -> Number of patches. image_size must be divisible by patch_size.
+            -> The number of patches is: n = (image_size // patch_size) ** 2 and n must be greater than 16.
+            num_classes: int.
+            -> Number of classes to classify.
+            dim: int.
+            -> Last dimension of output tensor after linear transformation nn.Linear(..., dim).
+            depth: int.
+            -> Number of Transformer blocks.
+            heads: int.
+            -> Number of heads in Multi-head Attention layer.
+            mlp_dim: int.
+            -> Dimension of the MLP (FeedForward) layer.
+            dropout: float between [0, 1], default 0..
+            -> Dropout rate.
+            emb_dropout: float between [0, 1], default 0.
+            -> Embedding dropout rate.
+            pool: string, either cls token pooling or mean pooling
+        """
+        super(ViT, self).__init__()
+
+        image_height, image_width = pair(image_size)
+        patch_height, patch_width = pair(patch_size)
+
+        assert image_height % patch_height == 0 and image_width % patch_width == 0, 'Image dimensions must be divisible by the patch size.'
+
+        num_patches = (image_height // patch_height) * (image_width // patch_width)
         assert pool in {'cls', 'mean'}, 'pool type must be either cls (cls token) or mean (mean pooling)'
 
         self.patch_embedding = Sequential([
-            Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size),
+            Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_height, p2=patch_width),
             nn.Dense(units=dim)
         ], name='patch_embedding')
 
@@ -133,7 +158,7 @@ class DeepViT(Model):
 
         self.mlp_head = Sequential([
             nn.LayerNormalization(),
-            nn.Dense(units=num_classes)
+            nn.Dense(units=num_coordinates * 2)
         ], name='mlp_head')
 
     def call(self, img, training=True, **kwargs):
@@ -156,12 +181,13 @@ class DeepViT(Model):
 
         return x
 
+
 """ Usage
 
-v = DeepViT(
+v = ViT(
     image_size = 256,
     patch_size = 32,
-    num_coordinates = 2,
+    num_coordinates = 3,
     dim = 1024,
     depth = 6,
     heads = 16,
