@@ -2,6 +2,15 @@ import tensorflow as tf
 import tensorflow_hub as hub
 
 
+def mse_with_nan(y_true, y_pred):
+    # Find the coordinates that are not NaN
+    valid_indices = tf.logical_not(tf.math.is_nan(y_true))
+    # Compute the mean squared error only on the valid coordinates
+    mse = tf.reduce_mean(tf.square(tf.boolean_mask(y_true - y_pred, valid_indices)))
+    return mse
+
+
+@tf.function
 def nelu(x):
     """
     A Relu function that does not get rid of the negative values,
@@ -11,11 +20,7 @@ def nelu(x):
     :param x: float Tensor to perform activation.
     :return: value of x, -1 if negative, equal if positive
     """
-    if x < 0:
-        return -1
-    else:
-        return x
-
+    return tf.where(x < 0, -1.0, x)
 
 
 def create_model(model_url, target_size, num_coordinates, activation_function=nelu):
@@ -36,8 +41,7 @@ def create_model(model_url, target_size, num_coordinates, activation_function=ne
     # create our own model
     model = tf.keras.Sequential([
         feature_extractor_layer,
-        tf.keras.layers.Dense((num_coordinates, 2), activation=activation_function, name="output_layer")
+        tf.keras.layers.Dense(num_coordinates * 2, activation=activation_function, name="output_layer")
     ])
 
     return model
-

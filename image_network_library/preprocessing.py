@@ -1,11 +1,12 @@
 import json
 import math
 import statistics
-
 import cv2 as cv
+import numpy as np
 import tensorflow as tf
-
+import os
 import sys
+from PIL import Image
 
 if sys.version_info < (3, 10):
     from importlib_metadata import entry_points
@@ -159,23 +160,81 @@ def measure_length(d, points_to_measure, pixel_irl=None, verbose=0, mode="None")
     return dist_dict, None
 
 
-def make_tensors(d):
+def make_tensors(coordinates_dict):
     """
-    Transforms the dictionary into input tensors
-    :param d: dictionary of shape <name_of_file, xy_coordinates>
-    :return: a dictionary of the same shape but all xy_coordinates list have the same size and shape, any empty spaces
-    are filled with [-1, -1]
-    All values are tensorflow constants
+    Transforms a dictionary of image coordinates into a dictionary of TensorFlow constants.
+
+    :param coordinates_dict: A dictionary containing image coordinates in the form <image_name, coordinates>, where
+                       coordinates is a list of xy pairs.
+    :return: A dictionary of the same shape as coordinates_dict, where all coordinate lists have the same size and shape.
+             Any empty spaces are filled with [-1, -1].
+
     """
 
-    values = list(d.values())
-    longest = 0
-    for value in values:
-        longest = max(longest, len(value))
+    max_boxes = max([len(v) for v in coordinates_dict.values()])
+    bbox_tensors = {}
+    for key in coordinates_dict:
+        coordinates_list = coordinates_dict[key]
+        bbox_array = [[-1, -1] for i in range(max_boxes)]
+        for i, bbox in enumerate(coordinates_list):
+            bbox_array[i] = bbox
+        bbox_tensor = tf.constant(bbox_array, dtype=tf.float32)
+        bbox_tensors[key] = bbox_tensor
+    return bbox_tensors
 
-    for key in d.keys():
-        if len(d[key]) != longest:
-            d[key].append([-1, -1])
-        d[key] = tf.constant(d[key])
 
-    return d
+def create_dataset(images_folder, y_train_dict, target_size=(256, 256)):
+    """
+    Transforms a dictionary of images and their corresponding coordinates into input tensors.
+
+    :param images_folder: the folder of the image dataset
+    :param y_train_dict: A dictionary where each key is the name of an image file and its corresponding value is a numpy
+    array of shape (n,2) containing the coordinates of n points in the image. If there are fewer than n points, the empty
+    coordinates are marked as [-1, -1].
+    :param target_size: The size to which each image in the dataset should be resized, default is (256, 256).
+    :return: A tuple containing two tensorflow tensors. The first tensor is a list of image arrays that have been
+    normalized between 0 and 1 and resized to target_size. The second tensor is a list of corresponding y_train tensors
+    where each tensor has shape (n, 2) and is normalized between 0 and 1. If there are fewer than n points, the empty
+    coordinates are marked as [-1, -1].
+    """
+
+    x_train = []
+    y_train = []
+
+    for image_name in os.listdir(images_folder):
+        image_path = os.path.join(images_folder, image_name)
+
+        # Load the image using PIL
+        try:
+            image = Image.open(image_path)
+        except Exception as e:
+            print(f"Error loading image {image_name}: {e}")
+            continue
+
+        # Resize the image
+        image = image.resize(target_size)
+
+        # Convert the image to a numpy array
+        image_array = np.asarray(image)
+
+        # Normalize the image
+        image_array = image_array / 255.0
+
+        # Append the image array to the x_train list
+        x_train.append(image_array)
+
+        # Get the corresponding y_train tensor
+        y_tensor = y_train_dict.get(image_name, None)
+
+        if y_tensor is not None:
+            # Normalize the y_train tensor
+            y_tensor = y_tensor / np.array(target_size[::-1])
+            print("test:" + str(y_tensor))
+            # Append the normalized y_train tensor to the y_train list
+            y_train.append(y_tensor)
+
+    # Convert the x_train and y_train lists to tensorflow tensors
+    x_train = tf.convert_to_tensor(x_train, dtype=tf.float32)
+    y_train = tf.convert_to_tensor(y_train, dtype=tf.float32)
+
+    return x_train, y_train

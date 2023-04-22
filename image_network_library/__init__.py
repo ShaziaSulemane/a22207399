@@ -13,36 +13,14 @@ from image_network_library.preprocessing import (
 )
 
 from image_network_library.networks import (
-    deepvit,
-    ViT,
-    mobile_vit
-)
-from image_network_library import networks
-
-from image_network_library.networks.deepvit import (
-    PreNorm,
-    MLP,
-    Attention,
-    Transformer,
-    DeepViT
+    create_model,
+    nelu
 )
 
-from image_network_library.networks.ViT import (
+from image_network_library.ViT import (
     PreNorm,
     MLP,
     Attention,
     Transformer,
     ViT
-)
-
-from image_network_library.networks.mobile_vit import (
-    PreNorm,
-    MLP,
-    Attention,
-    Transformer,
-    Conv_NxN_BN,
-    Swish,
-    MV2Block,
-    MobileViTBlock,
-    MobileViT
 )
